@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - EventHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --success: #00b894;
+            --danger: #d63031;
+            --dark: #2d3436;
+            --light: #f8f9fa;
+            --white: #ffffff;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            display: flex;
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .login-left {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 60px 40px;
+            color: var(--white);
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-left h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .login-left p {
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .features-list {
+            list-style: none;
+        }
+
+        .features-list li {
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features-list li::before {
+            content: "✓";
+            background: rgba(255, 255, 255, 0.2);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .login-right {
+            padding: 60px 50px;
+            width: 55%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            color: var(--dark);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-me input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .forgot-password {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #5b4cdb;
+            transform: translateY(-2px);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            background: var(--white);
+            padding: 0 15px;
+            position: relative;
+            color: #666;
+        }
+
+        .switch-login {
+            text-align: center;
+            color: #666;
+        }
+
+        .switch-login a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .switch-login a:hover {
+            text-decoration: underline;
+        }
+
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--white);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .back-home:hover {
+            transform: translateX(-5px);
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: #e6fff6;
+            color: var(--success);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* Verification Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .otp-inputs input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+
+        .otp-inputs input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left,
+            .login-right {
+                width: 100%;
+            }
+
+            .login-left {
+                padding: 40px 30px;
+            }
+
+            .login-right {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home">← Back to Home</a>
+
+    <div class="login-container">
+        <div class="login-left">
+            <h1>👨‍💼 Admin Portal</h1>
+            <p>Access powerful tools to create and manage events with AI assistance.</p>
+            <ul class="features-list">
+                <li>AI Schedule Generator</li>
+                <li>AI Speech Writer</li>
+                <li>Participant Management</li>
+                <li>Real-time Analytics</li>
+                <li>SMS Notification System</li>
+            </ul>
+        </div>
+        <div class="login-right">
+            <div class="login-header">
+                <h2>Admin Login</h2>
+                <p>Enter your credentials to access admin panel</p>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="admin@eventhub.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminCode">Admin Code</label>
+                    <input type="text" id="adminCode" placeholder="Enter admin verification code" required>
+                </div>
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary">Login to Admin Panel</button>
+            </form>
+
+            <div class="divider">
+                <span>OR</span>
+            </div>
+
+            <p class="switch-login">
+                Are you a student? <a href="student-login.html">Student Login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div class="modal" id="otpModal">
+        <div class="modal-content">
+            <h3>🔐 Verify Your Identity</h3>
+            <p>Enter the 4-digit code sent to your email</p>
+            <div class="otp-inputs">
+                <input type="text" maxlength="1" class="otp-input" data-index="0">
+                <input type="text" maxlength="1" class="otp-input" data-index="1">
+                <input type="text" maxlength="1" class="otp-input" data-index="2">
+                <input type="text" maxlength="1" class="otp-input" data-index="3">
+            </div>
+            <button class="btn btn-primary" onclick="verifyOTP()">Verify & Login</button>
+            <p style="margin-top: 15px; font-size: 14px;">
+                Didn't receive code? <a href="#" onclick="resendOTP()">Resend</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Default Admin Credentials
+        const defaultAdmin = {
+            email: "admin@eventhub.com",
+            password: "admin123",
+            adminCode: "ADMIN2024"
+        };
+
+        // Initialize admin in localStorage if not exists
+        if (!localStorage.getItem('admins')) {
+            localStorage.setItem('admins', JSON.stringify([defaultAdmin]));
+        }
+
+        // Form Submit
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const adminCode = document.getElementById('adminCode').value;
+
+            // Get admins from localStorage
+            const admins = JSON.parse(localStorage.getItem('admins')) || [];
+            
+            // Find matching admin
+            const admin = admins.find(a => 
+                a.email === email && 
+                a.password === password && 
+                a.adminCode === adminCode
+            );
+
+            if (admin) {
+                showSuccess("Credentials verified! Please complete OTP verification.");
+                setTimeout(() => {
+                    document.getElementById('otpModal').classList.add('active');
+                    generateOTP();
+                }, 1000);
+            } else {
+                showError("Invalid credentials or admin code. Please try again.");
+            }
+        });
+
+        // Generate OTP
+        let currentOTP = "";
+        function generateOTP() {
+            currentOTP = Math.floor(1000 + Math.random() * 9000).toString();
+            console.log("OTP for testing:", currentOTP); // For testing purposes
+            alert("Your OTP is: " + currentOTP + " (In real app, this would be sent via email)");
+        }
+
+        // OTP Input Navigation
+        document.querySelectorAll('.otp-input').forEach((input, index) => {
+            input.addEventListener('input', function() {
+                if (this.value.length === 1 && index < 3) {
+                    document.querySelectorAll('.otp-input')[index + 1].focus();
+                }
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && index > 0 && !this.value) {
+                    document.querySelectorAll('.otp-input')[index - 1].focus();
+                }
+            });
+        });
+
+        // Verify OTP
+        function verifyOTP() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            let enteredOTP = "";
+            otpInputs.forEach(input => enteredOTP += input.value);
+
+            if (enteredOTP === currentOTP) {
+                // Store login session
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                sessionStorage.setItem('adminEmail', document.getElementById('email').value);
+                
+                alert("Login successful! Redirecting to dashboard...");
+                window.location.href = "admin-dashboard.html";
+            } else {
+                alert("Invalid OTP! Please try again.");
+            }
+        }
+
+        // Resend OTP
+        function resendOTP() {
+            generateOTP();
+        }
+
+        // Show Error Message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        // Show Success Message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => successDiv.style.display = 'none', 5000);
+        }
+    </script>
+</body>
+</html>

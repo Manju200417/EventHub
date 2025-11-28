@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Event - EventHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+            --dark: #2d3436;
+            --light: #f8f9fa;
+            --white: #ffffff;
+            --live-red: #ff4757;
+        }
+
+        body {
+            background: var(--dark);
+            min-height: 100vh;
+            color: var(--white);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--live-red);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--white);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .viewer-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        /* Main Container */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            padding: 80px 20px 20px;
+            height: 100vh;
+        }
+
+        /* Left Column - Event Content */
+        .event-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Event Stage */
+        .event-stage {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(108,92,231,0.1)" stroke-width="0.5"/><circle cx="50" cy="50" r="30" fill="none" stroke="rgba(108,92,231,0.1)" stroke-width="0.5"/><circle cx="50" cy="50" r="20" fill="none" stroke="rgba(108,92,231,0.1)" stroke-width="0.5"/></svg>');
+            opacity: 0.5;
+        }
+
+        .event-header {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 30px;
+        }
+
+        .event-title {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .event-meta {
+            display: flex;
+            gap: 25px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .event-meta span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Current Session */
+        .current-session {
+            position: relative;
+            z-index: 1;
+            background: rgba(108, 92, 231, 0.2);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .session-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .session-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .session-speaker {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .speaker-avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .speaker-info {
+            line-height: 1.4;
+        }
+
+        .speaker-name {
+            font-weight: 600;
+        }
+
+        .speaker-role {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Progress Bar */
+        .session-progress {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* AI Assistant Section */
+        .ai-assistant {
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 184, 148, 0.15);
+            border: 1px solid rgba(0, 184, 148, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ai-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--success), #00cec9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .ai-info {
+            flex: 1;
+        }
+
+        .ai-info h4 {
+            margin-bottom: 5px;
+        }
+
+        .ai-info p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--success);
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        /* Schedule Timeline */
+        .schedule-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .schedule-header h3 {
+            font-size: 18px;
+        }
+
+        .timeline {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-time {
+            width: 60px;
+            font-size: 14px;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-content h4 {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .timeline-content p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .timeline-item.active {
+            background: rgba(108, 92, 231, 0.2);
+            margin: 0 -15px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-bottom: none;
+        }
+
+        .timeline-item.active .timeline-time {
+            color: var(--white);
+        }
+
+        .timeline-item.completed .timeline-content h4 {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        /* Right Column - Interaction Panel */
+        .interaction-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: calc(100vh - 100px);
+        }
+
+        /* Tab Navigation */
+        .panel-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        .panel-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .panel-tab.active {
+            background: var(--primary);
+        }
+
+        .panel-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Panel Content */
+        .panel-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-pane {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .tab-pane.active {
+            display: flex;
+        }
+
+        /* AI Chat */
+        .ai-chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-chat-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ai-chat-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ai-chat-info h4 {
+            font-size: 16px;
+        }
+
+        .ai-chat-info p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .ai-chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .chat-message.bot .message-avatar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .chat-message.user .message-avatar {
+            background: var(--success);
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .chat-message.bot .message-bubble {
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-message.user .message-bubble {
+            background: var(--primary);
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 5px;
+        }
+
+        .quick-questions {
+            padding: 10px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-q-btn {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: var(--white);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-q-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .ai-chat-input {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .ai-chat-input input {
+            flex: 1;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: var(--white);
+            font-size: 14px;
+        }
+
+        .ai-chat-input input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .ai-chat-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .ai-chat-input button {
+            width: 45px;
+            height: 45px;
+            background: var(--primary);
+            border: none;
+            border-radius: 50%;
+            color: var(--white);
+            cursor: pointer;
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+
+        .ai-chat-input button:hover {
+            transform: scale(1.1);
+        }
+
+        /* Live Q&A */
+        .qa-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .qa-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .qa-header h4 {
+            margin-bottom: 5px;
+        }
+
+        .qa-header p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .qa-questions {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .qa-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .qa-question {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .qa-user-avatar {
+            width: 35px;
+            height: 35px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .qa-question-content {
+            flex: 1;
+        }
+
+        .qa-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .qa-question-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .qa-answer {
+            background: rgba(108, 92, 231, 0.2);
+            border-left: 3px solid var(--primary);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin-left: 47px;
+        }
+
+        .qa-answer-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .qa-answer-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .qa-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            margin-left: 47px;
+        }
+
+        .qa-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .qa-action-btn:hover {
+            color: var(--primary);
+        }
+
+        .qa-action-btn.liked {
+            color: var(--danger);
+        }
+
+        .qa-input-section {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .qa-input-section textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: var(--white);
+            font-size: 14px;
+            resize: none;
+            height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .qa-input-section textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .qa-input-section textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .qa-submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: var(--white);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .qa-submit-btn:hover {
+            background: #5b4cdb;
+        }
+
+        /* Polls */
+        .polls-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .polls-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .polls-list {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .poll-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .poll-status {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--success);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .poll-status.closed {
+            background: var(--danger);
+        }
+
+        .poll-question {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .poll-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .poll-option {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .poll-option:hover {
+            border-color: var(--primary);
+        }
+
+        .poll-option.selected {
+            border-color: var(--primary);
+            background: rgba(108, 92, 231, 0.2);
+        }
+
+        .poll-option-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(108, 92, 231, 0.3);
+            transition: width 0.5s;
+            z-index: 0;
+        }
+
+        .poll-option-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .poll-option-text {
+            font-size: 14px;
+        }
+
+        .poll-option-percent {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .poll-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Participants */
+        .participants-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .participants-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .participants-count-badge {
+            background: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .participants-list {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+
+        .participant-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .participant-info {
+            flex: 1;
+        }
+
+        .participant-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .participant-status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .online-indicator {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        /* Floating Actions */
+        .floating-actions {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .floating-btn.primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .floating-btn.success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .floating-btn.danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .floating-btn.muted {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+        }
+
+        /* Reactions Overlay */
+        .reactions-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .reaction {
+            position: absolute;
+            font-size: 30px;
+            animation: floatUp 3s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-200px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* AI Summary Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            padding: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .summary-section {
+            margin-bottom: 25px;
+        }
+
+        .summary-section h4 {
+            color: var(--secondary);
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-section p {
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .summary-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .summary-section ul li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .summary-section ul li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .interaction-panel {
+                height: 600px;
+            }
+
+            .event-stage {
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .main-container {
+                padding: 100px 10px 100px;
+            }
+
+            .event-stage {
+                padding: 20px;
+            }
+
+            .event-title {
+                font-size: 24px;
+            }
+
+            .floating-actions {
+                padding: 10px 20px;
+            }
+
+            .floating-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <a href="index.html" class="logo">Event<span>Hub</span></a>
+        <div class="live-indicator">
+            <span class="live-dot"></span>
+            LIVE
+        </div>
+        <div class="top-bar-right">
+            <div class="viewer-count">
+                👥 <span id="viewerCount">127</span> watching
+            </div>
+            <button class="btn btn-primary" onclick="openSummaryModal()">📋 AI Summary</button>
+            <button class="btn btn-danger" onclick="leaveEvent()">Leave Event</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Column - Event Content -->
+        <div class="event-content">
+            <!-- Event Stage -->
+            <div class="event-stage">
+                <div class="stage-background"></div>
+                
+                <!-- Event Header -->
+                <div class="event-header">
+                    <h1 class="event-title" id="eventTitle">Tech Conference 2024</h1>
+                    <div class="event-meta">
+                        <span>📅 February 15, 2024</span>
+                        <span>🕐 Started at 09:00 AM</span>
+                        <span>📍 Main Auditorium</span>
+                    </div>
+                </div>
+
+                <!-- Current Session -->
+                <div class="current-session">
+                    <div class="session-label">🎯 Currently Happening</div>
+                    <h2 class="session-title" id="currentSessionTitle">Keynote: Future of AI Technology</h2>
+                    <div class="session-speaker">
+                        <div class="speaker-avatar">JD</div>
+                        <div class="speaker-info">
+                            <div class="speaker-name">Dr. John Doe</div>
+                            <div class="speaker-role">AI Research Lead, TechCorp</div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="sessionProgress" style="width: 65%;"></div>
+                        </div>
+                        <div class="progress-info">
+                            <span id="elapsedTime">29 min elapsed</span>
+                            <span id="remainingTime">16 min remaining</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant -->
+                <div class="ai-assistant">
+                    <div class="ai-avatar">🤖</div>
+                    <div class="ai-info">
+                        <h4>AI Event Assistant</h4>
+                        <p>Ask me anything about this event, schedule, or topics being discussed!</p>
+                    </div>
+                    <div class="ai-status">
+                        <span class="status-dot"></span>
+                        Online & Ready
+                    </div>
+                </div>
+
+                <!-- Schedule Timeline -->
+                <div class="schedule-section">
+                    <div class="schedule-header">
+                        <h3>📅 Event Schedule</h3>
+                        <span style="font-size: 13px; color: rgba(255,255,255,0.6);">3 of 6 completed</span>
+                    </div>
+                    <div class="timeline" id="scheduleTimeline">
+                        <!-- Timeline items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Interaction Panel -->
+        <div class="interaction-panel">
+            <!-- Tab Navigation -->
+            <div class="panel-tabs">
+                <div class="panel-tab active" onclick="switchPanel('ai-chat')">🤖 AI Chat</div>
+                <div class="panel-tab" onclick="switchPanel('qa')">❓ Q&A</div>
+                <div class="panel-tab" onclick="switchPanel('polls')">📊 Polls</div>
+                <div class="panel-tab" onclick="switchPanel('people')">👥</div>
+            </div>
+
+            <!-- Panel Content -->
+            <div class="panel-content">
+                <!-- AI Chat Panel -->
+                <div class="tab-pane active" id="ai-chat-panel">
+                    <div class="ai-chat-container">
+                        <div class="ai-chat-header">
+                            <div class="ai-chat-avatar">🤖</div>
+                            <div class="ai-chat-info">
+                                <h4>EventHub AI</h4>
+                                <p>Your intelligent event assistant</p>
+                            </div>
+                        </div>
+                        <div class="ai-chat-messages" id="aiChatMessages">
+                            <div class="chat-message bot">
+                                <div class="message-avatar">🤖</div>
+                                <div>
+                                    <div class="message-bubble">
+                                        Welcome to the live event! 🎉 I'm here to help you with:
+                                        <br><br>
+                                        • Event schedule & timing<br>
+                                        • Speaker information<br>
+                                        • Topic explanations<br>
+                                        • Session summaries<br><br>
+                                        Feel free to ask me anything!
+                                    </div>
+                                    <div class="message-time">Just now</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-q-btn" onclick="askQuickQuestion('schedule')">What's next?</button>
+                            <button class="quick-q-btn" onclick="askQuickQuestion('speaker')">About speaker</button>
+                            <button class="quick-q-btn" onclick="askQuickQuestion('summary')">Session summary</button>
+                            <button class="quick-q-btn" onclick="askQuickQuestion('topics')">Key topics</button>
+                        </div>
+                        <div class="ai-chat-input">
+                            <input type="text" id="aiChatInput" placeholder="Ask AI anything..." onkeypress="handleAIChatKeypress(event)">
+                            <button onclick="sendAIMessage()">➤</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q&A Panel -->
+                <div class="tab-pane" id="qa-panel">
+                    <div class="qa-container">
+                        <div class="qa-header">
+                            <h4>Live Q&A Session</h4>
+                            <p>Ask questions to speakers and get AI-assisted answers</p>
+                        </div>
+                        <div class="qa-questions" id="qaQuestions">
+                            <!-- Q&A items will be loaded here -->
+                        </div>
+                        <div class="qa-input-section">
+                            <textarea id="qaInput" placeholder="Type your question here..."></textarea>
+                            <button class="qa-submit-btn" onclick="submitQuestion()">Submit Question</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Polls Panel -->
+                <div class="tab-pane" id="polls-panel">
+                    <div class="polls-container">
+                        <div class="polls-header">
+                            <h4>Live Polls</h4>
+                            <p>Participate and see real-time results</p>
+                        </div>
+                        <div class="polls-list" id="pollsList">
+                            <!-- Polls will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participants Panel -->
+                <div class="tab-pane" id="people-panel">
+                    <div class="participants-container">
+                        <div class="participants-header">
+                            <h4>Participants</h4>
+                            <span class="participants-count-badge" id="participantsBadge">127 online</span>
+                        </div>
+                        <div class="participants-list" id="participantsList">
+                            <!-- Participants will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Actions -->
+    <div class="floating-actions">
+        <button class="floating-btn primary" onclick="sendReaction('👏')" title="Clap">👏</button>
+        <button class="floating-btn success" onclick="sendReaction('❤️')" title="Love">❤️</button>
+        <button class="floating-btn muted" onclick="sendReaction('😮')" title="Wow">😮</button>
+        <button class="floating-btn muted" onclick="sendReaction('😂')" title="Laugh">😂</button>
+        <button class="floating-btn muted" onclick="sendReaction('🔥')" title="Fire">🔥</button>
+        <button class="floating-btn danger" onclick="raiseHand()" title="Raise Hand" id="raiseHandBtn">✋</button>
+    </div>
+
+    <!-- Reactions Container -->
+    <div class="reactions-container" id="reactionsContainer"></div>
+
+    <!-- AI Summary Modal -->
+    <div class="modal" id="summaryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🤖 AI Session Summary</h3>
+                <button class="modal-close" onclick="closeSummaryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-section">
+                    <h4>📌 Current Session Overview</h4>
+                    <p id="summaryOverview">
+                        Dr. John Doe is presenting on the Future of AI Technology, focusing on how artificial intelligence 
+                        will transform industries over the next decade. The session covers machine learning advancements, 
+                        ethical AI considerations, and practical applications in healthcare and finance.
+                    </p>
+                </div>
+                <div class="summary-section">
+                    <h4>🎯 Key Points Discussed</h4>
+                    <ul id="summaryKeyPoints">
+                        <li>AI adoption is expected to grow by 300% in enterprise applications by 2025</li>
+                        <li>Machine learning models are becoming more efficient and accessible</li>
+                        <li>Ethical AI frameworks are essential for responsible development</li>
+                        <li>Healthcare and finance sectors are leading AI implementation</li>
+                        <li>Human-AI collaboration will define the future workforce</li>
+                    </ul>
+                </div>
+                <div class="summary-section">
+                    <h4>💡 Audience Insights</h4>
+                    <p>
+                        The audience has shown high engagement with topics related to AI ethics and practical 
+                        implementation strategies. Most questions focus on career opportunities and skill development 
+                        in the AI field.
+                    </p>
+                </div>
+                <div class="summary-section">
+                    <h4>⏭️ Coming Up Next</h4>
+                    <p id="summaryNextSession">
+                        <strong>Panel Discussion: AI in Education</strong><br>
+                        Starting in approximately 16 minutes with industry experts from leading EdTech companies.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if student is logged in
+        const studentName = sessionStorage.getItem('studentName') || 'Guest';
+        const studentId = sessionStorage.getItem('studentId') || 'guest';
+
+        // Get Event ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get('id') || 1;
+
+        // Load Event Data
+        const events = JSON.parse(localStorage.getItem('events')) || [];
+        const currentEvent = events.find(e => e.id == eventId) || {
+            title: "Tech Conference 2024",
+            date: "2024-02-15",
+            time: "09:00",
+            venue: "Main Auditorium"
+        };
+
+        // Set Event Info
+        document.getElementById('eventTitle').textContent = currentEvent.title;
+
+        // Schedule Data
+        const scheduleData = [
+            { time: "09:00", title: "Registration & Welcome Coffee", status: "completed" },
+            { time: "09:30", title: "Opening Ceremony", status: "completed" },
+            { time: "10:00", title: "Keynote: Future of AI Technology", speaker: "Dr. John Doe", status: "active" },
+            { time: "10:45", title: "Tea Break", status: "upcoming" },
+            { time: "11:00", title: "Panel Discussion: AI in Education", status: "upcoming" },
+            { time: "12:00", title: "Networking Session", status: "upcoming" }
+        ];
+
+        // Load Schedule Timeline
+        function loadSchedule() {
+            const timeline = document.getElementById('scheduleTimeline');
+            timeline.innerHTML = scheduleData.map(item => `
+                <div class="timeline-item ${item.status}">
+                    <span class="timeline-time">${item.time}</span>
+                    <div class="timeline-content">
+                        <h4>${item.title}</h4>
+                        ${item.speaker ? `<p>by ${item.speaker}</p>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Q&A Data
+        let qaData = [
+            {
+                id: 1,
+                user: "Alice Johnson",
+                avatar: "AJ",
+                question: "How can small businesses start implementing AI with limited resources?",
+                answer: "Great question! Small businesses can start with cloud-based AI services like chatbots, automated email responses, and analytics tools. Many platforms offer free tiers that are perfect for getting started.",
+                likes: 24,
+                liked: false
+            },
+            {
+                id: 2,
+                user: "Bob Smith",
+                avatar: "BS",
+                question: "What programming languages are most important for AI development?",
+                answer: "Python is the most popular language for AI due to its extensive libraries like TensorFlow and PyTorch. R is also great for statistical analysis, and JavaScript is gaining traction for web-based AI applications.",
+                likes: 18,
+                liked: false
+            }
+        ];
+
+        // Load Q&A
+        function loadQA() {
+            const qaContainer = document.getElementById('qaQuestions');
+            qaContainer.innerHTML = qaData.map(qa => `
+                <div class="qa-item">
+                    <div class="qa-question">
+                        <div class="qa-user-avatar">${qa.avatar}</div>
+                        <div class="qa-question-content">
+                            <div class="qa-user-name">${qa.user}</div>
+                            <div class="qa-question-text">${qa.question}</div>
+                        </div>
+                    </div>
+                    ${qa.answer ? `
+                        <div class="qa-answer">
+                            <div class="qa-answer-label">🤖 AI Answer</div>
+                            <div class="qa-answer-text">${qa.answer}</div>
+                        </div>
+                    ` : ''}
+                    <div class="qa-actions">
+                        <span class="qa-action-btn ${qa.liked ? 'liked' : ''}" onclick="likeQuestion(${qa.id})">
+                            ❤️ ${qa.likes}
+                        </span>
+                        <span class="qa-action-btn" onclick="replyQuestion(${qa.id})">
+                            💬 Reply
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Polls Data
+        let pollsData = [
+            {
+                id: 1,
+                question: "Which AI application interests you the most?",
+                status: "active",
+                options: [
+                    { text: "Healthcare & Medical AI", votes: 45, percent: 35 },
+                    { text: "Autonomous Vehicles", votes: 32, percent: 25 },
+                    { text: "Natural Language Processing", votes: 38, percent: 30 },
+                    { text: "Computer Vision", votes: 13, percent: 10 }
+                ],
+                totalVotes: 128,
+                userVoted: null
+            },
+            {
+                id: 2,
+                question: "How would you rate this session so far?",
+                status: "active",
+                options: [
+                    { text: "Excellent 🌟", votes: 67, percent: 52 },
+                    { text: "Good 👍", votes: 45, percent: 35 },
+                    { text: "Average 😐", votes: 12, percent: 9 },
+                    { text: "Needs Improvement 📝", votes: 5, percent: 4 }
+                ],
+                totalVotes: 129,
+                userVoted: null
+            }
+        ];
+
+        // Load Polls
+        function loadPolls() {
+            const pollsContainer = document.getElementById('pollsList');
+            pollsContainer.innerHTML = pollsData.map(poll => `
+                <div class="poll-card">
+                    <span class="poll-status ${poll.status === 'closed' ? 'closed' : ''}">${poll.status === 'active' ? '🔴 Live Poll' : '✓ Closed'}</span>
+                    <div class="poll-question">${poll.question}</div>
+                    <div class="poll-options">
+                        ${poll.options.map((option, index) => `
+                            <div class="poll-option ${poll.userVoted === index ? 'selected' : ''}" onclick="votePoll(${poll.id}, ${index})">
+                                <div class="poll-option-fill" style="width: ${option.percent}%"></div>
+                                <div class="poll-option-content">
+                                    <span class="poll-option-text">${option.text}</span>
+                                    <span class="poll-option-percent">${option.percent}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="poll-meta">
+                        <span>👥 ${poll.totalVotes} votes</span>
+                        <span>${poll.status === 'active' ? '⏱️ Ends in 5 min' : 'Poll ended'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Participants Data
+        const participantsData = [
+            { name: "Dr. John Doe", role: "Speaker", avatar: "JD", color: "#6c5ce7", status: "Speaking" },
+            { name: "Event Moderator", role: "Host", avatar: "EM", color: "#00b894", status: "Hosting" },
+            { name: "Alice Johnson", role: "Participant", avatar: "AJ", color: "#e17055", status: "Online" },
+            { name: "Bob Smith", role: "Participant", avatar: "BS", color: "#0984e3", status: "Online" },
+            { name: "Carol White", role: "Participant", avatar: "CW", color: "#fdcb6e", status: "Online" },
+            { name: "David Brown", role: "Participant", avatar: "DB", color: "#e84393", status: "Online" },
+            { name: "Emma Davis", role: "Participant", avatar: "ED", color: "#00cec9", status: "Online" },
+            { name: studentName, role: "You", avatar: studentName.charAt(0).toUpperCase(), color: "#6c5ce7", status: "Online" }
+        ];
+
+        // Load Participants
+        function loadParticipants() {
+            const list = document.getElementById('participantsList');
+            list.innerHTML = participantsData.map(p => `
+                <div class="participant-item">
+                    <div class="participant-avatar" style="background: ${p.color}">${p.avatar}</div>
+                    <div class="participant-info">
+                        <div class="participant-name">${p.name} ${p.role === 'You' ? '(You)' : ''}</div>
+                        <div class="participant-status">${p.status}</div>
+                    </div>
+                    <div class="online-indicator"></div>
+                </div>
+            `).join('');
+        }
+
+        // Switch Panel
+        function switchPanel(panelId) {
+            // Update tabs
+            document.querySelectorAll('.panel-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update panels
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById(`${panelId}-panel`).classList.add('active');
+        }
+
+        // AI Chat Functions
+        function sendAIMessage() {
+            const input = document.getElementById('aiChatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addChatMessage(message, 'user');
+                input.value = '';
+                
+                // Simulate AI typing
+                setTimeout(() => {
+                    const response = getAIResponse(message);
+                    addChatMessage(response, 'bot');
+                }, 1000);
+            }
+        }
+
+        function handleAIChatKeypress(event) {
+            if (event.key === 'Enter') {
+                sendAIMessage();
+            }
+        }
+
+        function addChatMessage(message, sender) {
+            const container = document.getElementById('aiChatMessages');
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const messageHTML = `
+                <div class="chat-message ${sender}">
+                    <div class="message-avatar">${sender === 'bot' ? '🤖' : studentName.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div class="message-bubble">${message}</div>
+                        <div class="message-time">${time}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', messageHTML);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('schedule') || lowerMessage.includes('next') || lowerMessage.includes('what\'s next')) {
+                return `📅 <strong>Current Session:</strong> Keynote - Future of AI Technology (ends in ~16 min)<br><br>
+                        ⏭️ <strong>Up Next:</strong> Tea Break (10:45 AM), followed by Panel Discussion on AI in Education at 11:00 AM.`;
+            } else if (lowerMessage.includes('speaker') || lowerMessage.includes('who is speaking')) {
+                return `🎤 <strong>Current Speaker:</strong><br><br>
+                        Dr. John Doe<br>
+                        AI Research Lead at TechCorp<br><br>
+                        He has 15+ years of experience in machine learning and has published over 50 papers on AI ethics and applications.`;
+            } else if (lowerMessage.includes('summary') || lowerMessage.includes('summarize')) {
+                return `📝 <strong>Session Summary So Far:</strong><br><br>
+                        Dr. Doe discussed:<br>
+                        • AI adoption trends (300% growth expected)<br>
+                        • Ethical considerations in AI development<br>
+                        • Healthcare & finance leading adoption<br>
+                        • Human-AI collaboration in workforce<br><br>
+                        The session is about 65% complete.`;
+            } else if (lowerMessage.includes('topic') || lowerMessage.includes('about')) {
+                return `💡 <strong>Key Topics Being Covered:</strong><br><br>
+                        1. Machine Learning Advancements<br>
+                        2. AI Ethics & Responsible Development<br>
+                        3. Industry Applications (Healthcare, Finance)<br>
+                        4. Future of Human-AI Collaboration<br>
+                        5. Career Opportunities in AI`;
+            } else if (lowerMessage.includes('venue') || lowerMessage.includes('where')) {
+                return `📍 <strong>Event Location:</strong><br><br>
+                        ${currentEvent.venue || 'Main Auditorium'}<br>
+                        Facilities: WiFi, Restrooms on Floor 1, Cafeteria nearby`;
+            } else if (lowerMessage.includes('help')) {
+                return `🤖 I can help you with:<br><br>
+                        • Event schedule & timing<br>
+                        • Speaker information<br>
+                        • Session summaries<br>
+                        • Topic explanations<br>
+                        • Venue information<br><br>
+                        Just ask me anything!`;
+            } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                return `Hello ${studentName}! 👋 I'm your AI assistant for this event. How can I help you?`;
+            } else {
+                return `Thanks for your question! Based on the current session content:<br><br>
+                        "${message}" is an interesting topic. The speaker mentioned that AI is rapidly evolving, and staying updated with the latest developments is crucial.<br><br>
+                        Would you like me to provide more specific information about the schedule, speaker, or topics?`;
+            }
+        }
+
+        function askQuickQuestion(type) {
+            const questions = {
+                schedule: "What's the schedule? What's coming next?",
+                speaker: "Tell me about the current speaker",
+                summary: "Can you summarize the current session?",
+                topics: "What are the key topics being discussed?"
+            };
+            
+            document.getElementById('aiChatInput').value = questions[type];
+            sendAIMessage();
+        }
+
+        // Q&A Functions
+        function submitQuestion() {
+            const input = document.getElementById('qaInput');
+            const question = input.value.trim();
+            
+            if (question) {
+                const newQA = {
+                    id: Date.now(),
+                    user: studentName,
+                    avatar: studentName.substring(0, 2).toUpperCase(),
+                    question: question,
+                    answer: null,
+                    likes: 0,
+                    liked: false
+                };
+                
+                qaData.unshift(newQA);
+                loadQA();
+                input.value = '';
+                
+                // Simulate AI answering
+                setTimeout(() => {
+                    const answer = generateAIAnswer(question);
+                    const qa = qaData.find(q => q.id === newQA.id);
+                    if (qa) {
+                        qa.answer = answer;
+                        loadQA();
+                    }
+                }, 2000);
+            }
+        }
+
+        function generateAIAnswer(question) {
+            const lowerQ = question.toLowerCase();
+            
+            if (lowerQ.includes('career') || lowerQ.includes('job')) {
+                return "AI offers numerous career opportunities! Focus on Python programming, machine learning fundamentals, and gain practical experience through projects. Certifications from platforms like Coursera or Google can boost your profile.";
+            } else if (lowerQ.includes('learn') || lowerQ.includes('start')) {
+                return "Start with Python basics, then move to machine learning libraries like scikit-learn. Online platforms like Coursera, edX, and fast.ai offer excellent free courses. Practice with real datasets from Kaggle!";
+            } else if (lowerQ.includes('future') || lowerQ.includes('predict')) {
+                return "AI will continue to transform industries. We expect more personalized AI assistants, advanced healthcare diagnostics, and autonomous systems. The key is responsible development with ethical considerations.";
+            } else {
+                return "That's a great question! AI is a vast field with many applications. The speaker recommends focusing on fundamentals first, then specializing in areas that interest you most. Would you like more specific guidance?";
+            }
+        }
+
+        function likeQuestion(id) {
+            const qa = qaData.find(q => q.id === id);
+            if (qa) {
+                qa.liked = !qa.liked;
+                qa.likes += qa.liked ? 1 : -1;
+                loadQA();
+            }
+        }
+
+        // Poll Functions
+        function votePoll(pollId, optionIndex) {
+            const poll = pollsData.find(p => p.id === pollId);
+            if (poll && poll.userVoted === null && poll.status === 'active') {
+                poll.userVoted = optionIndex;
+                poll.options[optionIndex].votes++;
+                poll.totalVotes++;
+                
+                // Recalculate percentages
+                poll.options.forEach(opt => {
+                    opt.percent = Math.round((opt.votes / poll.totalVotes) * 100);
+                });
+                
+                loadPolls();
+            }
+        }
+
+        // Reactions
+        function sendReaction(emoji) {
+            const container = document.getElementById('reactionsContainer');
+            const reaction = document.createElement('span');
+            reaction.className = 'reaction';
+            reaction.textContent = emoji;
+            reaction.style.left = `${Math.random() * 100 - 50}px`;
+            container.appendChild(reaction);
+            
+            // Remove after animation
+            setTimeout(() => {
+                reaction.remove();
+            }, 3000);
+        }
+
+        // Raise Hand
+        let handRaised = false;
+        function raiseHand() {
+            handRaised = !handRaised;
+            const btn = document.getElementById('raiseHandBtn');
+            
+            if (handRaised) {
+                btn.style.background = '#fdcb6e';
+                btn.style.animation = 'pulse 1s infinite';
+                addChatMessage("✋ You raised your hand! The moderator will notice you.", 'bot');
+            } else {
+                btn.style.background = '';
+                btn.style.animation = '';
+                addChatMessage("You lowered your hand.", 'bot');
+            }
+        }
+
+        // Summary Modal
+        function openSummaryModal() {
+            document.getElementById('summaryModal').classList.add('active');
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('summaryModal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('summaryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSummaryModal();
+            }
+        });
+
+        // Leave Event
+        function leaveEvent() {
+            if (confirm('Are you sure you want to leave this live event?')) {
+                window.location.href = 'student-dashboard.html';
+            }
+        }
+
+        // Update Viewer Count (simulate real-time)
+        function updateViewerCount() {
+            const count = document.getElementById('viewerCount');
+            const current = parseInt(count.textContent);
+            const change = Math.floor(Math.random() * 5) - 2; // -2 to +2
+            const newCount = Math.max(100, current + change);
+            count.textContent = newCount;
+            document.getElementById('participantsBadge').textContent = `${newCount} online`;
+        }
+
+        // Update Session Progress
+        function updateSessionProgress() {
+            const progressFill = document.getElementById('sessionProgress');
+            const currentWidth = parseInt(progressFill.style.width);
+            
+            if (currentWidth < 100) {
+                progressFill.style.width = (currentWidth + 0.5) + '%';
+                
+                const elapsed = Math.round(45 * (currentWidth / 100));
+                const remaining = 45 - elapsed;
+                
+                document.getElementById('elapsedTime').textContent = `${elapsed} min elapsed`;
+                document.getElementById('remainingTime').textContent = `${remaining} min remaining`;
+            }
+        }
+
+        // Simulate AI Messages
+        function simulateAIInsights() {
+            const insights = [
+                "💡 Tip: The speaker just mentioned a key concept about AI ethics. Feel free to ask me to explain it!",
+                "📊 Poll Alert: A new poll is now active! Check the Polls tab to participate.",
+                "🎯 The session is halfway through. Here's a good time to review the key points so far!",
+                "❓ Many participants are asking about career opportunities. Check the Q&A section!"
+            ];
+            
+            // Randomly show an insight every 2 minutes (for demo, every 30 seconds)
+            if (Math.random() > 0.7) {
+                const insight = insights[Math.floor(Math.random() * insights.length)];
+                addChatMessage(insight, 'bot');
+            }
+        }
+
+        // Initialize
+        function init() {
+            loadSchedule();
+            loadQA();
+            loadPolls();
+            loadParticipants();
+            
+            // Start real-time updates
+            setInterval(updateViewerCount, 5000);
+            setInterval(updateSessionProgress, 10000);
+            setInterval(simulateAIInsights, 30000);
+        }
+
+        // Run on load
+        init();
+    </script>
+</body>
+</html>

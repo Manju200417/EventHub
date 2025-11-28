@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Registration - EventHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+            --dark: #2d3436;
+            --light: #f8f9fa;
+            --white: #ffffff;
+        }
+
+        body {
+            background: var(--light);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--white);
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--dark);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            padding: 10px 20px;
+            background: var(--light);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* Main Container */
+        .registration-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
+        }
+
+        /* Form Section */
+        .form-section {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+        }
+
+        .form-header h1 {
+            font-size: 28px;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+        }
+
+        .form-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .form-steps::before {
+            content: "";
+            position: absolute;
+            top: 20px;
+            left: 50px;
+            right: 50px;
+            height: 3px;
+            background: #eee;
+            z-index: 0;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: #eee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-number {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .step.completed .step-number {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .step-label {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-group label span {
+            color: var(--danger);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group.error input,
+        .form-group.error select {
+            border-color: var(--danger);
+        }
+
+        .error-text {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-group.error .error-text {
+            display: block;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .phone-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-input select {
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .phone-input input {
+            flex: 1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .checkbox-group input {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 400;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .checkbox-group label a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #5b4cdb;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #ddd;
+            color: #666;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        /* Event Info Section */
+        .event-info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .event-card {
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .event-image {
+            height: 150px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .event-details {
+            padding: 25px;
+        }
+
+        .event-details h3 {
+            font-size: 20px;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+
+        .event-info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        .event-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-info-item span:first-child {
+            font-size: 18px;
+        }
+
+        /* Reminder Card */
+        .reminder-card {
+            background: linear-gradient(135deg, var(--success), #00cec9);
+            border-radius: 20px;
+            padding: 25px;
+            color: var(--white);
+        }
+
+        .reminder-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .reminder-card p {
+            opacity: 0.9;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .reminder-options {
+            margin-top: 15px;
+        }
+
+        .reminder-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .reminder-option input {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Help Card */
+        .help-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .help-card h4 {
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+
+        .help-card p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .help-card a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Success Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--success), #00cec9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            margin: 0 auto 25px;
+        }
+
+        .modal-content h2 {
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .modal-details {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .modal-details p {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-details p:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .registration-container {
+                grid-template-columns: 1fr;
+            }
+
+            .event-info-section {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .form-section {
+                padding: 25px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-steps {
+                display: none;
+            }
+
+            .form-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .form-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .phone-input {
+                flex-direction: column;
+            }
+
+            .phone-input select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Event<span>Hub</span></a>
+        <a href="javascript:history.back()" class="back-btn">← Back to Event</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="registration-container">
+        <!-- Form Section -->
+        <div class="form-section">
+            <div class="form-header">
+                <h1>🎫 Event Registration</h1>
+                <p>Fill in your details to register for this event</p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="form-steps">
+                <div class="step active" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Personal Info</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Contact Details</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Confirmation</div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <form id="registrationForm">
+                <!-- Step 1: Personal Info -->
+                <div class="form-step-content" id="stepContent1">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name <span>*</span></label>
+                            <input type="text" id="firstName" placeholder="Enter first name" required>
+                            <span class="error-text">Please enter your first name</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name <span>*</span></label>
+                            <input type="text" id="lastName" placeholder="Enter last name" required>
+                            <span class="error-text">Please enter your last name</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address <span>*</span></label>
+                        <input type="email" id="email" placeholder="you@example.com" required>
+                        <span class="error-text">Please enter a valid email address</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender">
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age Group</label>
+                            <select id="age">
+                                <option value="">Select Age Group</option>
+                                <option value="18-24">18-24</option>
+                                <option value="25-34">25-34</option>
+                                <option value="35-44">35-44</option>
+                                <option value="45+">45+</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Contact Details -->
+                <div class="form-step-content" id="stepContent2" style="display: none;">
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span>*</span></label>
+                        <div class="phone-input">
+                            <select id="countryCode">
+                                <option value="+91">+91 (IN)</option>
+                                <option value="+1">+1 (US)</option>
+                                <option value="+44">+44 (UK)</option>
+                                <option value="+61">+61 (AU)</option>
+                            </select>
+                            <input type="tel" id="phone" placeholder="Enter phone number" required>
+                        </div>
+                        <span class="error-text">Please enter a valid phone number</span>
+                        <p style="font-size: 12px; color: #666; margin-top: 5px;">📱 You'll receive SMS reminders on this number</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="organization">Organization/College</label>
+                        <input type="text" id="organization" placeholder="Enter your organization or college name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="designation">Designation/Course</label>
+                        <input type="text" id="designation" placeholder="e.g., Student, Engineer, Manager">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="requirements">Special Requirements (if any)</label>
+                        <textarea id="requirements" placeholder="Any dietary requirements, accessibility needs, or special requests..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div class="form-step-content" id="stepContent3" style="display: none;">
+                    <div style="background: var(--light); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                        <h3 style="color: var(--dark); margin-bottom: 20px;">📋 Review Your Information</h3>
+                        <div id="reviewInfo">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms">
+                            I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>. I understand that my data will be used for event communication purposes.
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group" style="margin-top: 15px;">
+                        <input type="checkbox" id="receiveUpdates" checked>
+                        <label for="receiveUpdates">
+                            I want to receive updates about future events and newsletters
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group" style="margin-top: 15px;">
+                        <input type="checkbox" id="smsReminders" checked>
+                        <label for="smsReminders">
+                            Send me SMS reminders before the event (24 hours & 1 hour before)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Form Buttons -->
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-outline" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+                        ← Previous
+                    </button>
+                    <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">
+                        Next Step →
+                    </button>
+                    <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">
+                        ✓ Complete Registration
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Event Info Section -->
+        <div class="event-info-section">
+            <!-- Event Card -->
+            <div class="event-card">
+                <div class="event-image" id="eventIcon">📅</div>
+                <div class="event-details">
+                    <h3 id="eventTitle">Loading...</h3>
+                    <div class="event-info-item">
+                        <span>📅</span>
+                        <span id="eventDate">Loading...</span>
+                    </div>
+                    <div class="event-info-item">
+                        <span>🕐</span>
+                        <span id="eventTime">Loading...</span>
+                    </div>
+                    <div class="event-info-item">
+                        <span>📍</span>
+                        <span id="eventVenue">Loading...</span>
+                    </div>
+                    <div class="event-info-item">
+                        <span>👥</span>
+                        <span id="eventSpots">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminder Card -->
+            <div class="reminder-card">
+                <h4>🔔 SMS Reminders</h4>
+                <p>We'll send you timely reminders so you never miss the event!</p>
+                <div class="reminder-options">
+                    <div class="reminder-option">
+                        <input type="checkbox" checked disabled>
+                        <label>24 hours before the event</label>
+                    </div>
+                    <div class="reminder-option">
+                        <input type="checkbox" checked disabled>
+                        <label>1 hour before the event</label>
+                    </div>
+                    <div class="reminder-option">
+                        <input type="checkbox" checked disabled>
+                        <label>Event start notification</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="help-card">
+                <h4>💬 Need Help?</h4>
+                <p>If you have any questions about the registration process or the event, feel free to reach out.</p>
+                <a href="mailto:support@eventhub.com">Contact Support →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎉</div>
+            <h2>Registration Successful!</h2>
+            <p>You have successfully registered for the event. We've sent a confirmation to your email and phone.</p>
+            
+            <div class="modal-details">
+                <p><span>Event:</span> <strong id="modalEventName">Tech Conference 2024</strong></p>
+                <p><span>Date:</span> <strong id="modalEventDate">Feb 15, 2024</strong></p>
+                <p><span>Time:</span> <strong id="modalEventTime">09:00 AM</strong></p>
+                <p><span>Venue:</span> <strong id="modalEventVenue">Main Auditorium</strong></p>
+            </div>
+
+            <p style="background: #e8f5e9; padding: 15px; border-radius: 8px; color: var(--success);">
+                📱 You will receive SMS reminders before the event!
+            </p>
+
+            <div class="modal-buttons">
+                <a href="events.html" class="btn btn-outline">Browse More Events</a>
+                <a href="student-dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get Event ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = parseInt(urlParams.get('id'));
+
+        // Get Data from localStorage
+        const events = JSON.parse(localStorage.getItem('events')) || [];
+        let participants = JSON.parse(localStorage.getItem('participants')) || [];
+
+        // Find Current Event
+        const event = events.find(e => e.id === eventId);
+
+        // Current Step
+        let currentStep = 1;
+
+        // Load Event Info
+        function loadEventInfo() {
+            if (!event) {
+                alert('Event not found!');
+                window.location.href = 'events.html';
+                return;
+            }
+
+            document.getElementById('eventIcon').textContent = event.icon || '📅';
+            document.getElementById('eventTitle').textContent = event.title;
+            document.getElementById('eventDate').textContent = formatDate(event.date);
+            document.getElementById('eventTime').textContent = formatTime(event.time);
+            document.getElementById('eventVenue').textContent = event.venue;
+            
+            const spotsLeft = event.maxParticipants - (event.participants || 0);
+            document.getElementById('eventSpots').textContent = `${spotsLeft} spots remaining`;
+
+            // Update page title
+            document.title = `Register - ${event.title} | EventHub`;
+        }
+
+        // Format Date
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+        }
+
+        // Format Time
+        function formatTime(timeStr) {
+            if (!timeStr) return 'TBA';
+            const [hours, minutes] = timeStr.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${minutes} ${ampm}`;
+        }
+
+        // Change Step
+        function changeStep(direction) {
+            // Validate current step before moving forward
+            if (direction === 1 && !validateStep(currentStep)) {
+                return;
+            }
+
+            // Update step
+            currentStep += direction;
+
+            // Update UI
+            updateStepUI();
+
+            // If on confirmation step, show review
+            if (currentStep === 3) {
+                showReview();
+            }
+        }
+
+        // Validate Step
+        function validateStep(step) {
+            let isValid = true;
+
+            if (step === 1) {
+                const firstName = document.getElementById('firstName');
+                const lastName = document.getElementById('lastName');
+                const email = document.getElementById('email');
+
+                // Clear previous errors
+                [firstName, lastName, email].forEach(el => el.parentElement.classList.remove('error'));
+
+                if (!firstName.value.trim()) {
+                    firstName.parentElement.classList.add('error');
+                    isValid = false;
+                }
+
+                if (!lastName.value.trim()) {
+                    lastName.parentElement.classList.add('error');
+                    isValid = false;
+                }
+
+                if (!email.value.trim() || !isValidEmail(email.value)) {
+                    email.parentElement.classList.add('error');
+                    isValid = false;
+                }
+            }
+
+            if (step === 2) {
+                const phone = document.getElementById('phone');
+                phone.parentElement.parentElement.classList.remove('error');
+
+                if (!phone.value.trim() || phone.value.length < 10) {
+                    phone.parentElement.parentElement.classList.add('error');
+                    isValid = false;
+                }
+            }
+
+            return isValid;
+        }
+
+        // Validate Email
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        // Update Step UI
+        function updateStepUI() {
+            // Update step indicators
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active', 'completed');
+                
+                if (i < currentStep) {
+                    step.classList.add('completed');
+                } else if (i === currentStep) {
+                    step.classList.add('active');
+                }
+            }
+
+            // Show/hide step content
+            for (let i = 1; i <= 3; i++) {
+                const content = document.getElementById(`stepContent${i}`);
+                content.style.display = i === currentStep ? 'block' : 'none';
+            }
+
+            // Update buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+
+            prevBtn.style.display = currentStep > 1 ? 'inline-flex' : 'none';
+            nextBtn.style.display = currentStep < 3 ? 'inline-flex' : 'none';
+            submitBtn.style.display = currentStep === 3 ? 'inline-flex' : 'none';
+        }
+
+        // Show Review
+        function showReview() {
+            const reviewInfo = document.getElementById('reviewInfo');
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('countryCode').value + ' ' + document.getElementById('phone').value;
+            const organization = document.getElementById('organization').value || 'Not specified';
+            const designation = document.getElementById('designation').value || 'Not specified';
+
+            reviewInfo.innerHTML = `
+                <p style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                    <span style="color: #666;">Full Name:</span>
+                    <strong>${firstName} ${lastName}</strong>
+                </p>
+                <p style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                    <span style="color: #666;">Email:</span>
+                    <strong>${email}</strong>
+                </p>
+                <p style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                    <span style="color: #666;">Phone:</span>
+                    <strong>${phone}</strong>
+                </p>
+                <p style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                    <span style="color: #666;">Organization:</span>
+                    <strong>${organization}</strong>
+                </p>
+                <p style="display: flex; justify-content: space-between; padding: 8px 0;">
+                    <span style="color: #666;">Designation:</span>
+                    <strong>${designation}</strong>
+                </p>
+            `;
+        }
+
+        // Form Submit
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Check if terms are agreed
+            if (!document.getElementById('agreeTerms').checked) {
+                alert('Please agree to the Terms & Conditions');
+                return;
+            }
+
+            // Get form data
+            const formData = {
+                id: Date.now(),
+                eventId: event.id,
+                eventTitle: event.title,
+                studentId: parseInt(sessionStorage.getItem('studentId')) || null,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                name: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('countryCode').value + document.getElementById('phone').value,
+                organization: document.getElementById('organization').value,
+                designation: document.getElementById('designation').value,
+                requirements: document.getElementById('requirements').value,
+                smsReminders: document.getElementById('smsReminders').checked,
+                registeredAt: new Date().toISOString()
+            };
+
+            // Check if already registered
+            const alreadyRegistered = participants.find(p => 
+                p.eventId === event.id && p.email === formData.email
+            );
+
+            if (alreadyRegistered) {
+                alert('You have already registered for this event with this email!');
+                return;
+            }
+
+            // Add participant
+            participants.push(formData);
+            localStorage.setItem('participants', JSON.stringify(participants));
+
+            // Update event participants count
+            const eventIndex = events.findIndex(e => e.id === event.id);
+            if (eventIndex !== -1) {
+                events[eventIndex].participants = (events[eventIndex].participants || 0) + 1;
+                localStorage.setItem('events', JSON.stringify(events));
+            }
+
+            // Schedule SMS reminder (simulation)
+            if (formData.smsReminders) {
+                console.log(`SMS reminder scheduled for ${formData.phone} for event on ${event.date}`);
+                // In real app, this would call SMS API
+            }
+
+            // Show success modal
+            document.getElementById('modalEventName').textContent = event.title;
+            document.getElementById('modalEventDate').textContent = formatDate(event.date);
+            document.getElementById('modalEventTime').textContent = formatTime(event.time);
+            document.getElementById('modalEventVenue').textContent = event.venue;
+            document.getElementById('successModal').classList.add('active');
+        });
+
+        // Pre-fill form if student is logged in
+        function prefillForm() {
+            const studentName = sessionStorage.getItem('studentName');
+            const studentEmail = sessionStorage.getItem('studentEmail');
+            const studentPhone = sessionStorage.getItem('studentPhone');
+
+            if (studentName) {
+                const nameParts = studentName.split(' ');
+                document.getElementById('firstName').value = nameParts[0] || '';
+                document.getElementById('lastName').value = nameParts.slice(1).join(' ') || '';
+            }
+
+            if (studentEmail) {
+                document.getElementById('email').value = studentEmail;
+            }
+
+            if (studentPhone) {
+                document.getElementById('phone').value = studentPhone;
+            }
+        }
+
+        // Initialize
+        loadEventInfo();
+        prefillForm();
+    </script>
+</body>
+</html>
